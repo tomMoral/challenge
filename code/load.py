@@ -129,5 +129,5 @@ if __name__ == '__main__':
     p = model.predict_proba(X_tst)
     with open('out.txt', 'w') as f:
         for pr in p:
-            f.write(str(pr)+'\n')
+            f.write(str(pr[1])+'\n')
 
