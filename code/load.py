@@ -81,7 +81,7 @@ if __name__ == '__main__':
 
     print 'Preprocess the data'
     from Preprocess import Preprocess
-    prep_model = Preprocess()
+    prep_model = Preprocess(strategy_mv='median')
     X = prep_model.fit_transform(np.concatenate([X, X_tst]))
 
     # Get back the training, validation and test set
