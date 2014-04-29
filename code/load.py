@@ -52,15 +52,32 @@ def load(N, tst=None):
 
 if __name__ == '__main__':
 
-    N_trn = 110000
-    N_val = 10000
-    N_tst = 1000
+    import argparse
+    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser.add_argument('--CV', action='store_true',
+                   help='Perform a cross validation on the model')
+    parser.add_argument('--val', action='store_true',
+                   help='Keep a validation set')
+    args = parser.parse_args()
+
+
+    if args.val:
+	N_trn = 150000
+    	N_val = 10000
+    else:
+        N_trn = -1
+        N_val = 0
+    
+    N_tst = -1
 
     print 'Load training test'
     X, y = load(N_trn+N_val)
+    if N_trn == -1 or X.shape[0] < N_trn+N_val:
+	N_trn = X.shape[0]
 
     print 'Load test set'
     X_tst, _ = load(N_tst, tst=True)
+    N_tst = X_tst.shape[0]
 
     print 'Preprocess the data'
     from Preprocess import Preprocess
@@ -73,16 +90,13 @@ if __name__ == '__main__':
 
     X_val = X[N_trn:N_trn+N_val]
     y_val = y[N_trn:]
-    X_tst = X[N_trn+N_val:]
-
-    assert(X_tst.shape[1] == X_trn.shape[1])
+    X_tst = X[-N_tst:]
 
     from sklearn.ensemble import RandomForestClassifier
 
-    CV = False
     model = RandomForestClassifier(n_jobs=6)
 
-    if CV:
+    if args.CV:
         parameters = {'n_estimators': [150, 175, 200],
                       'oob_score': [True, False]}
 
@@ -104,12 +118,16 @@ if __name__ == '__main__':
     print 'Fit the model'
     model.fit(X_trn, y_trn)
 
-    print 'Evale the model'
-    p_val = model.predict_proba(X_val)
+    if args.val:
+    	print 'Evale the model'
+    	p_val = model.predict_proba(X_val)
+    	print 'Precision: ', 1-sum(abs(p_val[:, 1] - y_val))*1./N_val
+    	from sklearn.metrics import roc_auc_score
+    	print 'ROC: ', roc_auc_score(y_val, p_val[:, 1])
 
-    print 'Precision: ', 1-sum(abs(p_val[:, 1] - y_val))*1./N_val
+    print 'Predict the test set proba'
+    p = model.predict_proba(X_tst)
+    with open('out.txt', 'w') as f:
+        for pr in p:
+            f.write(str(pr)+'\n')
 
-    from sklearn.metrics import roc_auc_score
-    print 'ROC: ', roc_auc_score(y_val, p_val[:, 1])
-
-    #p = model.predict_proba(X_tst)
