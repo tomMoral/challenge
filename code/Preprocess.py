@@ -18,9 +18,9 @@ class Preprocess(object):
         feat = []
 
         n = X.shape[-1]
-        sys.stdout.write('Preprocessing: {:6.2%}'.format(0))
+        sys.stdout.write('Preprocessing: {:7.2%}'.format(0))
         for i in range(n):
-            sys.stdout.write('\b'*8 + '{:7.2%}'.format(i*1./n))
+            sys.stdout.write('\b'*7 + '{:7.2%}'.format(i*1./n))
             sys.stdout.flush()
             try:
                 c = X[:, i].astype(float).reshape((-1, 1))
@@ -37,7 +37,7 @@ class Preprocess(object):
                     c = lab_bin.fit_transform(c)
                     encs[i] = (lab_enc, lab_bin)
             feat.append(c)
-        sys.stdout.write('\b'*7+'100%   \n')
+        sys.stdout.write('\b'*6+'100%   \n')
 
         self.encs = encs
 
