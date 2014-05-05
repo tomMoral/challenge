@@ -112,8 +112,10 @@ if __name__ == '__main__':
         model.oob_score = clf.best_estimator_['oob_score']
 
     else:
-        model.n_estimators = 175
+        model.n_estimators = 1000
         model.oob_score = False
+	model.max_depth = 20
+	model.n_jobs = 15
 
     print 'Fit the model'
     model.fit(X_trn, y_trn)
