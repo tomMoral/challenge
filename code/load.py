@@ -58,6 +58,8 @@ if __name__ == '__main__':
                         help='Perform a cross validation on the model')
     parser.add_argument('--val', action='store_true',
                         help='Keep a validation set')
+    parser.add_argument('--SGD', action='store_true',
+                        help='Use the SGD rank algo')
     args = parser.parse_args()
 
     if args.val:
@@ -111,28 +113,33 @@ if __name__ == '__main__':
         model.oob_score = clf.best_estimator_['oob_score']
 
     else:
-        model.n_estimators = 400
+        model.n_estimators = 600
         model.oob_score = False
         model.max_depth = 20
         model.n_jobs = 20
+ 
 
-    from SGDRank import SGDRank
-    from scikitlearn import cross_validation as cv
-    model = SGDRank()
-    cv.cross_val_score(model, X, y, cv=3, n_jobs=3)
+    from sklearn import cross_validation as cv
+  
+    if args.SGD: 
+        from SGDRank import SGDClassifier
+        model = SGDClassifier()
+    
+    print 'CV'
+    cv.cross_val_score(model, X_trn, y_trn, cv=3, n_jobs=3)
 
     print 'Fit the model'
-    model.fit(X, y)
+    model.fit(X_trn, y_trn)
 
     if args.val:
         print 'Evale the model'
-        p_val = model.predict_proba(X_val)
+        p_val = model.predict(X_val)
         print 'Precision: ', 1-sum(abs(p_val[:, 1] - y_val))*1./N_val
         from sklearn.metrics import roc_auc_score
         print 'ROC: ', roc_auc_score(y_val, p_val[:, 1])
-
+    
     print 'Predict the test set proba'
-    p = model.predict_proba(X_tst)
+    p = model.predict(X_tst)
     with open('out.txt', 'w') as f:
         for pr in p:
-            f.write(str(pr[1])+'\n')
+            f.write(astr(pr[1])+'\n')
