@@ -55,25 +55,24 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description='Process some integers.')
     parser.add_argument('--CV', action='store_true',
-                   help='Perform a cross validation on the model')
+                        help='Perform a cross validation on the model')
     parser.add_argument('--val', action='store_true',
-                   help='Keep a validation set')
+                        help='Keep a validation set')
     args = parser.parse_args()
 
-
     if args.val:
-	N_trn = 150000
-    	N_val = 10000
+        N_trn = 150000
+        N_val = 10000
     else:
         N_trn = -1
         N_val = 0
-    
+
     N_tst = -1
 
     print 'Load training test'
     X, y = load(N_trn+N_val)
     if N_trn == -1 or X.shape[0] < N_trn+N_val:
-	N_trn = X.shape[0]
+        N_trn = X.shape[0]
 
     print 'Load test set'
     X_tst, _ = load(N_tst, tst=True)
@@ -114,22 +113,26 @@ if __name__ == '__main__':
     else:
         model.n_estimators = 400
         model.oob_score = False
-	model.max_depth = 20
-	model.n_jobs = 20
+        model.max_depth = 20
+        model.n_jobs = 20
+
+    from SGDRank import SGDRank
+    from scikitlearn import cross_validation as cv
+    model = SGDRank()
+    cv.cross_val_score(model, X, y, cv=3, n_jobs=3)
 
     print 'Fit the model'
-    model.fit(X_trn, y_trn)
+    model.fit(X, y)
 
     if args.val:
-    	print 'Evale the model'
-    	p_val = model.predict_proba(X_val)
-    	print 'Precision: ', 1-sum(abs(p_val[:, 1] - y_val))*1./N_val
-    	from sklearn.metrics import roc_auc_score
-    	print 'ROC: ', roc_auc_score(y_val, p_val[:, 1])
+        print 'Evale the model'
+        p_val = model.predict_proba(X_val)
+        print 'Precision: ', 1-sum(abs(p_val[:, 1] - y_val))*1./N_val
+        from sklearn.metrics import roc_auc_score
+        print 'ROC: ', roc_auc_score(y_val, p_val[:, 1])
 
     print 'Predict the test set proba'
     p = model.predict_proba(X_tst)
     with open('out.txt', 'w') as f:
         for pr in p:
             f.write(str(pr[1])+'\n')
-
